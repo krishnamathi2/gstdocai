@@ -198,9 +198,9 @@ ${additionalInstructions ? `\nADDITIONAL USER INSTRUCTIONS (incorporate these in
         { role: "user", content: USER_PROMPT },
       ],
       temperature: 0.3,
-    });
+    }) as { choices: Array<{ message: { content: string | null } }> };
 
-    const letterContent = completion.choices[0].message.content || "";
+    const letterContent = completion.choices[0]?.message?.content || "";
 
     // Decrement credits and save letter in a transaction
     const [updatedUser, savedLetter] = await prisma.$transaction([
