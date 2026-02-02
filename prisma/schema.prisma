@@ -1,0 +1,115 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// NextAuth.js Models
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  accounts      Account[]
+  sessions      Session[]
+  
+  // Subscription & Usage
+  plan          String    @default("free") // free, pro, firm
+  credits       Int       @default(5)      // Free tier: 5 letters/month
+  creditsResetAt DateTime @default(now())
+  
+  // Payment
+  razorpayCustomerId String?
+  razorpaySubscriptionId String?
+  
+  // Letter History
+  letters       Letter[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Email Verification Token for signup
+model EmailVerificationToken {
+  id         String   @id @default(cuid())
+  email      String
+  token      String   @unique
+  expires    DateTime
+  createdAt  DateTime @default(now())
+}
+
+// Letter History
+model Letter {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  clientName     String
+  gstin          String?
+  complianceType String
+  period         String
+  dueDate        String?
+  consequence    String?
+  tone           String
+  language       String
+  content        String   // Generated letter content
+  
+  createdAt      DateTime @default(now())
+}
+
+// Payment/Subscription Records
+model Payment {
+  id                  String   @id @default(cuid())
+  razorpayPaymentId   String   @unique
+  razorpayOrderId     String
+  razorpaySignature   String?
+  userId              String
+  amount              Int      // in paise
+  currency            String   @default("INR")
+  status              String   // created, captured, failed
+  plan                String   // pro, firm
+  createdAt           DateTime @default(now())
+}
