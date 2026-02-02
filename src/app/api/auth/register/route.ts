@@ -4,6 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { sendVerificationEmail } from "@/lib/email";
 import crypto from "crypto";
 
+// Force dynamic rendering - prevents build-time errors
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
   try {
     const { name, email, password } = await req.json();

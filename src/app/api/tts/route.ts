@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
+
 // Google Cloud Text-to-Speech API configuration
 // Supports high-quality voices for Indian languages
 
