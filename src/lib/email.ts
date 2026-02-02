@@ -1,15 +1,22 @@
 import nodemailer from 'nodemailer';
 
-// Create transporter - uses environment variables
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: process.env.SMTP_SECURE === 'true',
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASSWORD,
-  },
-});
+// Lazy transporter creation to avoid build-time errors
+let transporter: nodemailer.Transporter | null = null;
+
+function getTransporter() {
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASSWORD,
+      },
+    });
+  }
+  return transporter;
+}
 
 interface SendEmailOptions {
   to: string;
@@ -19,7 +26,7 @@ interface SendEmailOptions {
 
 export async function sendEmail({ to, subject, html }: SendEmailOptions): Promise<boolean> {
   try {
-    await transporter.sendMail({
+    await getTransporter().sendMail({
       from: process.env.SMTP_FROM || '"GST Doc AI" <noreply@gstdocai.com>',
       to,
       subject,
